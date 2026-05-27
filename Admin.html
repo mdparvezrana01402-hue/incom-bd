@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Master Admin Panel</title>
+    <style>
+        :root { --bg: #111827; --card: #1f2937; --text: #f9fafb; --primary: #3b82f6; --success: #10b981; --danger: #ef4444; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin:0; padding: 20px; }
+        .header { background: var(--card); padding: 20px; text-align: center; border-radius: 10px; margin-bottom: 20px; border-bottom: 4px solid var(--primary); }
+        .container { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px; }
+        .card { background: var(--card); padding: 20px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        h3 { margin-top: 0; color: #fbbf24; border-bottom: 1px solid #374151; padding-bottom: 10px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-size: 14px; color: #9ca3af; }
+        .form-control { width: 100%; padding: 10px; background: #111827; border: 1px solid #374151; color: #fff; border-radius: 6px; box-sizing: border-box; }
+        .btn { padding: 10px 15px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; width: 100%; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-success { background: var(--success); color: white; }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn:hover { filter: brightness(1.2); }
+        .list-box { max-height: 250px; overflow-y: auto; background: #111827; padding: 10px; border-radius: 6px; }
+        .item { background: var(--card); padding: 10px; margin-bottom: 8px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; font-size: 14px; }
+        .badge { padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; }
+        .badge-pending { background: #f59e0b; color: #000; }
+        .badge-approved { background: var(--success); color: #fff; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h2 style="margin:0;">⚙️ অল-ইন-ওয়ান সুপার অ্যাডমিন প্যানেল</h2>
+    <p style="margin:5px 0 0 0; color:#9ca3af;">ইউজার অ্যাপের ভিডিও (ছবি সহ), সোশ্যাল ও গেম লিংক, উইথড্র এবং ডেইলি ৫০ টাকার ব্যালেন্স লাইভ কন্ট্রোল করুন</p>
+</div>
+
+<div class="container">
+
+    <div class="card">
+        <h3>📺 নতুন ভিডিও যুক্ত করুন</h3>
+        <div class="form-group">
+            <label>ভিডিওর শিরোনাম (Title)</label>
+            <input type="text" id="v-title" class="form-control" placeholder="যেমন: নতুন নিয়মে ইনকাম করুন">
+        </div>
+        <div class="form-group">
+            <label>ইউটিউব ভিডিও লিংক (YouTube URL)</label>
+            <input type="text" id="v-url" class="form-control" placeholder="লিংক পেস্ট করুন (অটো এমবেড হবে)">
+        </div>
+        <div class="form-group">
+            <label>ভিডিও থাম্বনেইল / কভার ছবির লিংক (Image URL)</label>
+            <input type="text" id="v-thumb" class="form-control" placeholder="যেমন: https://site.com/photo.jpg">
+        </div>
+        <button class="btn btn-primary" onclick="addVideo()">🚀 ভিডিও পাবলিশ করুন</button>
+        
+        <h4>বর্তমান ভিডিও লিস্ট:</h4>
+        <div class="list-box" id="admin-video-list"></div>
+    </div>
+
+    <div class="card">
+        <h3>🔗 লিংক ও টাস্ক কন্ট্রোল</h3>
+        <p style="font-size:12px; color:#9ca3af;">ইউজার অ্যাপের সোশ্যাল টাস্ক এবং গেম খেলার লিংক এখান থেকে লাইভ পরিবর্তন করুন।</p>
+        <div class="form-group">
+            <label>টেলিগ্রাম চ্যানেল লিংক</label>
+            <input type="text" id="task-tg-url" class="form-control" placeholder="https://t.me/your_channel">
+        </div>
+        <div class="form-group">
+            <label>ইউটিউব চ্যানেল লিংক</label>
+            <input type="text" id="task-yt-url" class="form-control" placeholder="https://youtube.com">
+        </div>
+        <div class="form-group">
+            <label>গেম লিংক (Game URL)</label>
+            <input type="text" id="task-game-url" class="form-control" placeholder="যেকোনো গেমের লিংক এখানে দিন">
+        </div>
+        <button class="btn btn-success" onclick="saveTaskLinks()">💾 সব লিংক আপডেট করুন</button>
+    </div>
+
+    <div class="card">
+        <h3>💰 উইথড্র রিকোয়েস্ট সমূহ</h3>
+        <p style="font-size:12px; color:#9ca3af;">ইউজাররা উইথড্র দিলে এখানে জমা হবে। টাকা পাঠিয়ে Approve চাপুন।</p>
+        <div class="list-box" id="admin-withdraw-list" style="max-height: 400px;"></div>
+    </div>
+
+    <div class="card">
+        <h3>👤 রেজিস্টার্ড ইউজারসমূহ</h3>
+        <div class="list-box" id="admin-user-list" style="margin-bottom:15px;"></div>
+
+        <h3>✍️ ইউজার ব্যালেন্স পরিবর্তন</h3>
+        <div class="form-group">
+            <label>ইউজার আইডি (User ID)</label>
+            <input type="number" id="edit-uid" class="form-control" placeholder="লিস্ট থেকে আইডি দিন">
+        </div>
+        <div class="form-group">
+            <label>নতুন ব্যালেন্স পরিমাণ (৳)</label>
+            <input type="number" id="edit-ubal" class="form-control" placeholder="যেমন: ৫০০">
+        </div>
+        <button class="btn btn-success" onclick="changeUserBalance()">💾 ব্যালেন্স আপডেট করুন</button>
+    </div>
+
+</div>
+
+<script>
+    const channel = new BroadcastChannel('app_sync_channel');
+
+    function loadAdminPanel() {
+        renderAdminVideos();
+        renderWithdrawRequests();
+        renderUserList();
+        loadTaskLinks();
+    }
+
+    // ০. টাস্ক ও গেম লিংক লোড এবং সেভ লজিক
+    function loadTaskLinks() {
+        document.getElementById('task-tg-url').value = localStorage.getItem('task_tg_url') || 'https://t.me/your_channel';
+        document.getElementById('task-yt-url').value = localStorage.getItem('task_yt_url') || 'https://youtube.com';
+        document.getElementById('task-game-url').value = localStorage.getItem('task_game_url') || 'https://t.me/progress_org_bot/start';
+    }
+
+    function saveTaskLinks() {
+        const tgUrl = document.getElementById('task-tg-url').value;
+        const ytUrl = document.getElementById('task-yt-url').value;
+        const gameUrl = document.getElementById('task-game-url').value;
+        
+        localStorage.setItem('task_tg_url', tgUrl);
+        localStorage.setItem('task_yt_url', ytUrl);
+        localStorage.setItem('task_game_url', gameUrl);
+        
+        notifyUserApp();
+        alert("সব লিংক সফলভাবে আপডেট এবং ইউজার অ্যাপে সিঙ্ক করা হয়েছে!");
+    }
+
+    // ১. ভিডিও ম্যানেজমেন্ট (থাম্বনেইল সহ রেন্ডার ও সেভ ফিচার)
+    function renderAdminVideos() {
+        let videos = JSON.parse(localStorage.getItem('videos')) || [];
+        const container = document.getElementById('admin-video-list');
+        container.innerHTML = videos.length === 0 ? "<p style='color:#6b7280; font-size:12px;'>কোনো কাস্টম ভিডিও নেই</p>" : "";
+        
+        videos.forEach(v => {
+            container.innerHTML += `
+                <div class="item">
+                    <span style="text-overflow:ellipsis; overflow:hidden; white-space:nowrap; max-width:200px;">🎬 ${v.title}</span>
+                    <button class="btn btn-danger" style="width:auto; padding:3px 8px; font-size:11px;" onclick="deleteVideo('${v.id}')">ডিলিট</button>
+                </div>
+            `;
+        });
+    }
+
+    function addVideo() {
+        const title = document.getElementById('v-title').value;
+        let url = document.getElementById('v-url').value;
+        const thumb = document.getElementById('v-thumb').value; // নতুন কভার ছবি
+
+        if(!title || !url) { alert("সব ঘর পূরণ করুন!"); return; }
+        
+        let videoId = "";
+        if (url.includes("youtu.be/")) {
+            videoId = url.split("youtu.be/")[1].split("?")[0];
+        } else if (url.includes("youtube.com/watch")) {
+            const urlParams = new URLSearchParams(new URL(url).search);
+            videoId = urlParams.get("v");
+        } else if (url.includes("youtube.com/embed/")) {
+            videoId = url.split("youtube.com/embed/")[1].split("?")[0];
+        }
+
+        if (videoId) {
+            url = "https://www.youtube.com/embed/" + videoId;
+        } else {
+            alert("অনুগ্রহ করে একটি সঠিক ইউটিউব ভিডিও লিংক দিন!");
+            return;
+        }
+
+        // ইউজার যদি কোনো থাম্বনেইল ছবি না দেয়, তবে ইউটিউবের ডিফল্ট থাম্বনেইল অটো তৈরি হবে
+        let finalThumbnail = thumb;
+        if(!finalThumbnail) {
+            finalThumbnail = "https://img.youtube.com/vi/" + videoId + "/hqdefault.jpg";
+        }
+        
+        let videos = JSON.parse(localStorage.getItem('videos')) || [];
+        let newId = "vid_" + Date.now();
+        
+        // ইউজার অ্যাপের ডাটাবেজের সাথে সামঞ্জস্য রেখে thumbnail অবজেক্টসহ ডেটা পুশ
+        videos.push({ id: newId, title: title, url: url, thumbnail: finalThumbnail });
+        
+        localStorage.setItem('videos', JSON.stringify(videos));
+        notifyUserApp();
+        loadAdminPanel();
+        
+        document.getElementById('v-title').value = "";
+        document.getElementById('v-url').value = "";
+        document.getElementById('v-thumb').value = "";
+        alert("ভিডিও এবং ছবির থাম্বনেইল সফলভাবে ইউজার অ্যাপে যোগ করা হয়েছে!");
+    }
+
+    function deleteVideo(id) {
+        let videos = JSON.parse(localStorage.getItem('videos')) || [];
+        videos = videos.filter(v => v.id !== id);
+        localStorage.setItem('videos', JSON.stringify(videos));
+        notifyUserApp();
+        loadAdminPanel();
+    }
+
+    // ২. উইথড্র রিকোয়েস্ট ম্যানেজমেন্ট
+    function renderWithdrawRequests() {
+        let requests = JSON.parse(localStorage.getItem('withdrawRequests')) || [];
+        const container = document.getElementById('admin-withdraw-list');
+        container.innerHTML = requests.length === 0 ? "<p style='color:#6b7280; text-align:center;'>কোনো রিকোয়েস্ট পেন্ডিং নেই</p>" : "";
+
+        requests.reverse().forEach(r => {
+            container.innerHTML += `
+                <div style="background:#111827; padding:12px; margin-bottom:10px; border-radius:6px; border-left:4px solid ${r.status==='Pending'?'#f59e0b':'#10b981'}">
+                    <div style="display:flex; justify-content:space-between;">
+                        <strong>👤 ${r.userName} (${r.userId})</strong>
+                        <span class="badge badge-${r.status.toLowerCase()}">${r.status}</span>
+                    </div>
+                    <p style="margin:5px 0; font-size:13px; color:#9ca3af;">মেথড: ${r.method} | নাম্বার: ${r.number}</p>
+                    <p style="margin:5px 0; font-weight:bold; color:#fbbf24;">টাকা: ${r.amount} ৳</p>
+                    ${r.status === 'Pending' ? `
+                        <div style="display:flex; gap:10px; margin-top:8px;">
+                            <button class="btn btn-success" style="padding:5px; font-size:12px;" onclick="updateWithdrawStatus(${r.id}, 'Approved')">Approve</button>
+                            <button class="btn btn-danger" style="padding:5px; font-size:12px;" onclick="updateWithdrawStatus(${r.id}, 'Rejected')">Reject</button>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        });
+    }
+
+    function updateWithdrawStatus(id, newStatus) {
+        let requests = JSON.parse(localStorage.getItem('withdrawRequests')) || [];
+        let req = requests.find(r => r.id === id);
+        if(req) {
+            if(newStatus === 'Rejected') {
+                let usersList = JSON.parse(localStorage.getItem('usersList')) || [];
+                let user = usersList.find(u => u.id === req.userId);
+                if(user) {
+                    user.balance += (req.amount + 10);
+                    localStorage.setItem('usersList', JSON.stringify(usersList));
+                    localStorage.setItem('balance', user.balance);
+                }
+            }
+            req.status = newStatus;
+            localStorage.setItem('withdrawRequests', JSON.stringify(requests));
+            notifyUserApp();
+            loadAdminPanel();
+            alert(`রিকোয়েস্টটি সফলভাবে ${newStatus} করা হয়েছে!`);
+        }
+    }
+
+    // ৩. ইউজার কন্ট্রোল ও ব্যালেন্স এডিট
+    function renderUserList() {
+        let users = JSON.parse(localStorage.getItem('usersList')) || [];
+        const container = document.getElementById('admin-user-list');
+        container.innerHTML = users.length === 0 ? "<p style='color:#6b7280; font-size:12px;'>কোনো ইউজার ডাটা নেই</p>" : "";
+
+        users.forEach(u => {
+            container.innerHTML += `
+                <div class="item" style="cursor:pointer;" onclick="selectUserForEdit(${u.id}, ${u.balance})">
+                    <div>
+                        <strong>${u.name}</strong><br>
+                        <span style="font-size:11px; color:#aaa;">ID: ${u.id}</span>
+                    </div>
+                    <div style="color:#10b981; font-weight:bold;">${u.balance.toFixed(0)} ৳</div>
+                </div>
+            `;
+        });
+    }
+
+    function selectUserForEdit(id, bal) {
+        document.getElementById('edit-uid').value = id;
+        document.getElementById('edit-ubal').value = bal;
+    }
+
+    function changeUserBalance() {
+        const id = parseInt(document.getElementById('edit-uid').value);
+        const newBal = parseFloat(document.getElementById('edit-ubal').value);
+
+        if(!id || isNaN(newBal)) { alert("সঠিক ইউজার আইডি এবং ব্যালেন্স ইনপুট দিন!"); return; }
+
+        let users = JSON.parse(localStorage.getItem('usersList')) || [];
+        let user = users.find(u => u.id === id);
+        if(user) {
+            user.balance = newBal;
+            localStorage.setItem('usersList', JSON.stringify(users));
+            localStorage.setItem('balance', newBal); 
+            notifyUserApp();
+            loadAdminPanel();
+            alert(`ইউজার আইডির (${id}) ব্যালেন্স সফলভাবে ${newBal} ৳ করা হয়েছে!`);
+        } else {
+            alert("এই আইডির কোনো ইউজার পাওয়া যায়নি!");
+        }
+    }
+
+    function notifyUserApp() {
+        channel.postMessage({ type: 'REFRESH_USER' });
+    }
+
+    channel.onmessage = (event) => {
+        if (event.data.type === 'REFRESH_ADMIN') {
+            loadAdminPanel();
+        }
+    };
+
+    window.onload = loadAdminPanel;
+</script>
+</body>
+</html>
