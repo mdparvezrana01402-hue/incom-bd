@@ -1,11 +1,37 @@
 <!DOCTYPE html>
 <html lang="bn">
 <head>
+  <script type="module">
+...
+  // Import the functions you need from the SDKs you need
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-analytics.js";
+  // TODO: Add SDKs for Firebase products that you want to use
+  // https://firebase.google.com/docs/web/setup#available-libraries
+
+  // Your web app's Firebase configuration
+  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+  const firebaseConfig = {
+    apiKey: "AIzaSyBvwpX4gimb8YgS2zsJ03Pm94HsdfiBPjY",
+    authDomain: "incom-bd-96552.firebaseapp.com",
+    databaseURL: "https://incom-bd-96552-default-rtdb.firebaseio.com",
+    projectId: "incom-bd-96552",
+    storageBucket: "incom-bd-96552.firebasestorage.app",
+    messagingSenderId: "883207318698",
+    appId: "1:883207318698:web:90072baa64b1183fd8f4d3",
+    measurementId: "G-8F9XP7S11K"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
+</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Earn Money Mini App</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
+      
         :root { --primary-color: #0088cc; --bg-color: #17212b; --text-color: #ffffff; --card-bg: #24303f; --accent-color: #31b545; }
         * { box-sizing:border-box; }
         body { font-family: 'Segoe UI', Roboto, sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding-bottom: 80px; }
@@ -111,6 +137,346 @@
 
     <div id="withdraw" class="page">
         <h3>টাকা উত্তোলন (Withdraw)</h3>
+        <div class="video-card">
+            <p style="color: #ffdd00; font-size: 14px; margin-top: 0;">⚠️ সর্বনিম্ন উত্তোলন ১০০ টাকা। উইথড্র করার ২৪ ঘণ্টার ভেতর পেমেন্ট পেয়ে যাবেন।</p>
+            <div class="form-group">
+                <label>মেথড সিলেক্ট করুন</label>
+                <select class="form-control" id="w-method">
+                    <option value="বিকাশ">বিকাশ (Personal)</option>
+                    <option value="নগদ">নগদ (Personal)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>অ্যাকাউন্ট নাম্বার</label>
+                <input type="number" class="form-control" id="w-number" placeholder="017XXXXXXXX">
+            </div>
+            <div class="form-group">
+                <label>টাকার পরিমাণ (৳)</label>
+                <input type="number" class="form-control" id="w-amount" placeholder="সর্বনিম্ন ১০০">
+            </div>
+            <button class="btn" style="background-color: var(--accent-color);" onclick="processWithdraw()">উত্তোলন রিকোয়েস্ট পাঠান</button>
+        </div>
+
+        <h3>আমার পেমেন্ট হিস্ট্রি</h3>
+        <div id="user-withdraw-history"></div>
+    </div>
+
+    <div id="profile" class="page">
+        <h3>আমার প্রোফাইল</h3>
+        <div class="video-card" style="text-align:center;">
+            <div style="width:80px; height:80px; background:var(--primary-color); border-radius:50%; margin:0 auto 10px auto; display:flex; align-items:center; justify-content:center; font-size:32px;">👤</div>
+            <h4 id="prof-name" style="margin:5px 0;">ইউজার নাম</h4>
+            <div class="username-box">Username: <span id="unique-username"></span></div>
+            <p id="prof-id" style="color:#aaa; margin:5px 0;">আইডি: 12345678</p>
+            <p style="color:var(--accent-color); font-weight:bold;">মোট আয়: <span id="prof-balance">0</span> ৳</p>
+            <div class="badge">🎁 প্রতি রেফারে ১০ টাকা বোনাস</div>
+            <div class="copy-box" id="ref-link"></div>
+            <button class="btn" style="margin-top:10px;" onclick="shareReferral()">বন্ধুদের রেফার করুন</button>
+        </div>
+    </div>
+</div>
+
+<div class="nav-bar">
+    <div class="nav-item active" onclick="switchPage('home', this)">🏠<br>হোম</div>
+    <div class="nav-item" onclick="switchPage('leaderboard', this)">📊<br>লিডারবোর্ড</div>
+    <div class="nav-item" onclick="switchPage('tasks', this)">✅<br>টাস্ক</div>
+    <div class="nav-item" onclick="switchPage('withdraw', this)">💰<br>উইথড্র</div>
+    <div class="nav-item" onclick="switchPage('profile', this)">👤<br>প্রোফাইল</div>
+</div>
+
+<script>
+    const tg = window.Telegram.WebApp;
+    tg.expand();
+
+    const channel = new BroadcastChannel('app_sync_channel');
+
+    const defaultVideos = [
+        { id: "1", title: "অনলাইন ইনকাম গাইড ২০২৬", url: "https://www.youtube.com/embed/dQw4w9WgXcQ", thumbnail: "https://img.youtube.com/vi/dQw4w9WgXcQ/hqdefault.jpg" },
+        { id: "2", title: "সহজে টাকা ইনকাম করার উপায়", url: "https://www.youtube.com/embed/dQw4w9WgXcQ", thumbnail: "https://img.youtube.com/vi/dQw4w9WgXcQ/hqdefault.jpg" }
+    ];
+
+    let balance, adCounts, completedTasks, videos, usersList, dailyFiftyCount, lastResetDate;
+async function loadData() {
+
+    console.log("ডাটাবেস থেকে তথ্য লোড হচ্ছে...");
+
+    balance =
+        parseFloat(localStorage.getItem('balance')) || 0;
+
+    adCounts =
+        JSON.parse(localStorage.getItem('adCounts')) || {};
+
+    completedTasks =
+        JSON.parse(localStorage.getItem('completedTasks')) || [];
+
+    videos =
+        JSON.parse(localStorage.getItem('videos')) || defaultVideos;
+
+    usersList =
+        JSON.parse(localStorage.getItem('usersList')) || [];
+
+    dailyFiftyCount =
+        parseInt(localStorage.getItem('dailyFiftyCount')) || 0;
+
+    lastResetDate =
+        localStorage.getItem('lastResetDate') || "";
+
+try {
+
+    updateUI();
+
+    renderVideos();
+
+    renderDailyFiftyUI();
+
+    renderUserWithdrawHistory();
+
+} catch (e) {
+
+    console.error("UI রেন্ডারিং এ সমস্যা হয়েছে:", e);
+
+}
+        localStorage.setItem('usersList', JSON.stringify(usersList));
+    }
+
+    let tgUser = tg.initDataUnsafe?.user;
+    let userId = tgUser?.id || 554321; 
+    let firstName = tgUser?.first_name || "Test User";
+    let uniqueUsername = localStorage.getItem('uniqueUsername') || "user_" + firstName.replace(/\s/g,'').toLowerCase() + "_" + userId;
+    localStorage.setItem('uniqueUsername', uniqueUsername);
+
+    const referralLink = "https://t.me/Income95_1_bot/app?startapp=" + uniqueUsername;
+
+    function initUI() {
+        loadData();
+        document.getElementById('prof-name').innerText = firstName;
+        document.getElementById('prof-id').innerText = "আইডি: " + userId;
+        document.getElementById('unique-username').innerText = uniqueUsername;
+        document.getElementById('ref-link').innerText = referralLink;
+        updateUI();
+        renderVideos()
+        renderDailyFiftyUI();
+        
+    }
+
+    function updateUI(){
+        document.getElementById('user-balance').innerText = balance.toFixed(0);
+        document.getElementById('prof-balance').innerText = balance.toFixed(0);
+        localStorage.setItem('balance', balance);
+        
+        let exist = usersList.find(u => u.id === userId);
+        if(exist) exist.balance = balance;
+        localStorage.setItem('usersList', JSON.stringify(usersList));
+        
+        channel.postMessage({ type: 'REFRESH_ADMIN' });
+    }
+
+    function renderVideos() {
+        const container = document.getElementById('video-container');
+        container.innerHTML = "";
+        
+        videos.forEach(video => {
+            if(!adCounts[video.id]) adCounts[video.id] = 0;
+            let count = adCounts[video.id];
+            let isUnlocked = count >= 3;
+
+            container.innerHTML += `
+                <div class="video-card" id="vid-${video.id}">
+                    <div class="video-thumb" id="thumb-${video.id}">
+                        ${isUnlocked ? 
+                            `<iframe width="100%" height="150" src="${video.url}" frameborder="0" allowfullscreen></iframe>` : 
+                            `<img src="${video.thumbnail || 'https://via.placeholder.com/300x150?text=Lock'}" alt="Thumb" style="width:100%; height:100%; object-fit:cover;">`
+                        }
+                    </div>
+                    <h4>${video.title}</h4>
+                    <p style="font-size:12px; color:#aaa;">ভিডিও দেখতে ৩টি অ্যাড দেখুন। প্রতি অ্যাডে ১ টাকা।</p>
+                    <button class="btn" id="btn-${video.id}" onclick="watchAd('${video.id}')" ${isUnlocked ? 'disabled' : ''}>
+                        ${isUnlocked ? 'ভিডিও আনলকড 🎉' : `অ্যাড দেখুন (${count}/3)`}
+                    </button>
+                </div>
+            `;
+        });
+    }
+
+    function watchAd(videoId){
+        if(!adCounts[videoId]) adCounts[videoId] = 0;
+        if(adCounts[videoId] < 3){
+            alert("একটি অ্যাড লোড হচ্ছে... 15 সেকেন্ড অপেক্ষা করুন।");
+            setTimeout(() => {
+                adCounts[videoId]++;
+                balance += 1;
+                localStorage.setItem('adCounts', JSON.stringify(adCounts));
+                updateUI();
+                renderVideos();
+
+                if(adCounts[videoId] === 3){
+                    alert("অভিনন্দন! ভিডিও আনলক হয়েছে।");
+                } else {
+                    alert(`অ্যাড دیکھا সফল! বাকি ${3 - adCounts[videoId]} টি।`);
+                }
+            }, 2000);
+        }
+    }
+
+    function renderDailyFiftyUI() {
+        document.getElementById('daily-ad-status').innerText = `${dailyFiftyCount}/50`;
+        const btn = document.getElementById('daily-ad-btn');
+        if(dailyFiftyCount >= 50) {
+            btn.innerText = "আজকের ৫০টি অ্যাড দেখা শেষ 🛑";
+            btn.disabled = true;
+            btn.style.backgroundColor = "#4a5867";
+        }
+    }
+
+    function watchDailyFiftyAd() {
+        if(dailyFiftyCount < 50) {
+            alert("ডেইলি টাস্কের ১টি অ্যাড লোড হচ্ছে... ১৫ সেকেন্ড অপেক্ষা করুন।");
+            window.open("https://omg10.com/4/11071731", "_blank");
+            setTimeout(() => {
+                dailyFiftyCount++;
+                balance += 1;
+                localStorage.setItem('dailyFiftyCount', dailyFiftyCount);
+                updateUI();
+                renderDailyFiftyUI();
+                alert(`সাফল্যের সাথে অ্যাড দেখা সম্পন্ন! আপনার ব্যালেন্সে ১ টাকা যোগ হয়েছে। (${dailyFiftyCount}/50)`);
+            }, 2000);
+        }
+    }
+
+    function processWithdraw(){
+        const method = document.getElementById('w-method').value;
+        const number = document.getElementById('w-number').value;
+        const amount = parseFloat(document.getElementById('w-amount').value);
+
+        if(!number || !amount || amount < 100){
+            alert("সব তথ্য সঠিকভাবে দিন! সর্বনিম্ন ১০০ টাকা।");
+            return;
+        }
+        if((amount + 10) > balance){
+            alert("আপনার পর্যাপ্ত ব্যালেন্স নেই! (চার্জ ১০ টাকা সহ)");
+            return;
+        }
+
+        balance -= (amount + 10);
+        updateUI();
+
+        let withdrawRequests = JSON.parse(localStorage.getItem('withdrawRequests')) || [];
+        withdrawRequests.push({
+            id: Date.now(),
+            userId: userId,
+            userName: firstName,
+            method: method,
+            number: number,
+            amount: amount,
+            status: "Pending"
+        });
+        localStorage.setItem('withdrawRequests', JSON.stringify(withdrawRequests));
+        channel.postMessage({ type: 'REFRESH_ADMIN' });
+
+        alert(`উইথড্র রিকোয়েস্ট সফল হয়েছে! আপনি ২৪ ঘণ্টার ভেতর পেমেন্ট পেয়ে যাবেন।`);
+        document.getElementById('w-number').value = "";
+        document.getElementById('w-amount').value = "";
+        renderUserWithdrawHistory();
+    }
+
+    function renderUserWithdrawHistory() {
+        const container = document.getElementById('user-withdraw-history');
+        let requests = JSON.parse(localStorage.getItem('withdrawRequests')) || [];
+        let myRequests = requests.filter(r => r.userId === userId);
+        
+        if(myRequests.length === 0) {
+            container.innerHTML = `<p style="color:#aaa; text-align:center; font-size:14px;">আপনার কোনো পূর্ববর্তী উইথড্র হিস্ট্রি নেই।</p>`;
+            return;
+        }
+
+        container.innerHTML = "";
+        myRequests.reverse().forEach(r => {
+            let badgeClass = "status-pending";
+            let statusText = "পেন্ডিং";
+            
+            if(r.status === "Approved") {
+                badgeClass = "status-approved";
+                statusText = "কনফার্মড ✅";
+            } else if(r.status === "Rejected") {
+                badgeClass = "status-rejected";
+                statusText = "বাতিল ❌";
+            }
+
+            container.innerHTML += `
+                <div class="list-item" style="background: var(--card-bg); margin-bottom:10px; padding:12px;">
+                    <div>
+                        <strong>${r.amount} ৳ (${r.method})</strong>
+                        <p style="margin:4px 0 0 0; font-size:11px; color:#aaa;">নাম্বার: ${r.number}</p>
+                    </div>
+                    <span class="status-badge ${badgeClass}">${statusText}</span>
+                </div>
+            `;
+        });
+    }
+
+    // 🛠️ আপডেটেড ফাংশন: ইউজার যতবার ক্লিক করবে ততবারই লিংকে ঢুকিয়ে দেবে
+    function completeTask(taskId, reward){
+        let targetUrl = "";
+        if(taskId === 'tg_task') {
+            targetUrl = localStorage.getItem('task_tg_url') || 'https://t.me/your_channel';
+        } else if(taskId === 'yt_task') {
+            targetUrl = localStorage.getItem('task_yt_url') || 'https://youtube.com';
+        } else if(taskId === 'game_task') {
+            targetUrl = localStorage.getItem('task_game_url') || 'https://t.me/progress_org_bot/start';
+        }
+
+        // প্রতি ক্লিকেই সরাসরি লিংকে পাঠিয়ে দিবে
+        tg.openLink(targetUrl);
+        
+        // শুধু প্রথম ক্লিকের সময় ব্যালেন্স যোগ হবে, বারবার ক্লিক করলে বোনাস ডুপ্লিকেট হবে না
+        if(!completedTasks.includes(taskId)){
+            balance += reward;
+            completedTasks.push(taskId);
+            localStorage.setItem('completedTasks', JSON.stringify(completedTasks));
+            updateUI();
+        }
+    }
+
+    function switchPage(pageId, element){
+        document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+        document.getElementById(pageId).classList.add('active');
+        element.classList.add('active');
+        if(pageId === 'leaderboard') loadLeaderboard();
+        if(pageId === 'withdraw') renderUserWithdrawHistory();
+    }
+
+    function loadLeaderboard(){
+        const list = document.getElementById('leaderboard-list');
+        list.innerHTML = "";
+        let sorted = [...usersList].sort((a,b) => b.balance - a.balance);
+        sorted.forEach((user, index)=>{
+            list.innerHTML += `
+                <div class="list-item">
+                    <div><strong>#${index+1} ${user.name}</strong></div>
+                    <div style="color:var(--accent-color); font-weight:bold;">${user.balance.toFixed(0)} ৳</div>
+                </div>
+            `;
+        });
+    }
+
+    function shareReferral(){
+        const text = `💸 টাকা ইনকাম করুন অ্যাপ থেকে!\n🎁 রেফার লিংক:\n${referralLink}`;
+        tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(referralLink)}&text=${encodeURIComponent(text)}`);
+    }
+
+    channel.onmessage = (event) => {
+        if (event.data.type === 'REFRESH_USER') {
+            initUI();
+        }
+    };
+
+    window.onload = initUI;
+</script>
+
+<script src='//libtl.com/sdk.js' data-zone='11066378' data-sdk='show_11066378'></script>
+</body>
+</html>        <h3>টাকা উত্তোলন (Withdraw)</h3>
         <div class="video-card">
             <p style="color: #ffdd00; font-size: 14px; margin-top: 0;">⚠️ সর্বনিম্ন উত্তোলন ১০০ টাকা। উইথড্র করার ২৪ ঘণ্টার ভেতর পেমেন্ট পেয়ে যাবেন।</p>
             <div class="form-group">
