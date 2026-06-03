@@ -43,9 +43,9 @@
 
     <!-- নতুন ভিডিও যুক্ত করার ফর্ম -->
     <div class="section-box" style="border-color: #0088cc; background-color: #f9fbfd;">
-        <h3 style="color: #0088cc;">🎬 নতুন ভিডিও আপলোড</h3>
+        <h3 style="color: #0088cc;">🎬 নতুন পোস্ট বা লিংক আপলোড</h3>
         <div class="form-group">
-            <label>ভিডিওর নাম (Title):</label>
+            <label>পোস্ট বা ভিডিওর নাম (Title):</label>
             <input type="text" id="vTitle" placeholder="১৪ মিনিটের ভাইরাল ভিডিও...">
         </div>
         <div class="form-group">
@@ -53,13 +53,13 @@
             <input type="text" id="vThumb" placeholder="https://images.com/photo.jpg">
         </div>
         <div class="form-group">
-            <label>আসল ভিডিও লিংক (MP4 Video URL):</label>
-            <input type="text" id="vUrl" placeholder="https://server.com/video.mp4">
+            <label>টার্গেট লিংক (যেকোনো ওয়েবসাইট, ড্রাইভ, ইউটিউব বা টেলিগ্রাম লিংক):</label>
+            <input type="text" id="vUrl" placeholder="https://example.com/movie-page বা টেলিগ্রাম লিংক">
         </div>
-        <button style="background: #0088cc;" onclick="addVideo()">ভিডিও সেভ করুন</button>
+        <button style="background: #0088cc;" onclick="addVideo()">লিংক ও পোস্ট সেভ করুন</button>
     </div>
 
-    <h3>বিদ্যমান ভিডিওর তালিকা</h3>
+    <h3>বিদ্যমান ভিডিও ও লিংকের তালিকা</h3>
     <div id="adminVideoList"></div>
 </div>
 
@@ -110,7 +110,7 @@
 
         videos.push(newVideo);
         localStorage.setItem('admin_videos', JSON.stringify(videos));
-        alert("ভিডিও সফলভাবে যুক্ত হয়েছে!");
+        alert("সফলভাবে যুক্ত হয়েছে!");
         
         document.getElementById('vTitle').value = '';
         document.getElementById('vThumb').value = '';
@@ -119,7 +119,7 @@
     }
 
     function deleteVideo(index) {
-        if(confirm("ভিডিওটি ডিলিট করতে চান?")) {
+        if(confirm("এটি ডিলিট করতে চান?")) {
             videos.splice(index, 1);
             localStorage.setItem('admin_videos', JSON.stringify(videos));
             displayVideos();
